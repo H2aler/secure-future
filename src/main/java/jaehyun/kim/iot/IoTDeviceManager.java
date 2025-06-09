@@ -2,68 +2,46 @@ package jaehyun.kim.iot;
 
 import jaehyun.kim.iot.model.IoTDevice;
 import jaehyun.kim.iot.model.SecurityPolicy;
+import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.ArrayList;
 
+@Component
 @Slf4j
-@Service
 public class IoTDeviceManager {
-    private final ConcurrentHashMap<String, IoTDevice> devices = new ConcurrentHashMap<>();
+    
+    private final List<IoTDevice> devices = new ArrayList<>();
     
     public void registerDevice(IoTDevice device) {
-        devices.put(device.getDeviceId(), device);
-        log.info("새로운 IoT 디바이스 등록: {}", device.getDeviceId());
+        devices.add(device);
+        log.info("디바이스 등록 완료: {}", device.getDeviceId());
     }
     
-    public void monitorDevice(String deviceId) {
-        IoTDevice device = devices.get(deviceId);
-        if (device != null) {
-            // 디바이스 상태 모니터링
-            checkDeviceHealth(device);
-            analyzeDeviceBehavior(device);
-            updateSecurityPolicy(device);
-        }
+    public void updateDeviceStatus(String deviceId, String status) {
+        devices.stream()
+            .filter(d -> d.getDeviceId().equals(deviceId))
+            .findFirst()
+            .ifPresent(device -> {
+                device.setStatus(status);
+                device.setLastSeen(System.currentTimeMillis());
+                log.info("디바이스 상태 업데이트: {} - {}", deviceId, status);
+            });
     }
     
-    private void checkDeviceHealth(IoTDevice device) {
-        // 디바이스 상태 점검
-        if (!device.isHealthy()) {
-            log.warn("디바이스 상태 이상 감지: {}", device.getDeviceId());
-            triggerAlert(device);
-        }
+    public void applySecurityPolicy(String deviceId, SecurityPolicy policy) {
+        devices.stream()
+            .filter(d -> d.getDeviceId().equals(deviceId))
+            .findFirst()
+            .ifPresent(device -> {
+                device.updateSecurityPolicy(policy);
+                log.info("보안 정책 적용 완료: {}", deviceId);
+            });
     }
     
-    private void analyzeDeviceBehavior(IoTDevice device) {
-        // 디바이스 행동 패턴 분석
-        if (isAnomalyDetected(device)) {
-            log.warn("이상 행동 패턴 감지: {}", device.getDeviceId());
-            initiateSecurityProtocol(device);
-        }
-    }
-    
-    private void updateSecurityPolicy(IoTDevice device) {
-        // 보안 정책 동적 업데이트
-        device.updateSecurityPolicy(generateSecurityPolicy(device));
-    }
-    
-    private boolean isAnomalyDetected(IoTDevice device) {
-        // 이상 행동 패턴 감지 로직
-        return device.isVulnerable();
-    }
-    
-    private void triggerAlert(IoTDevice device) {
-        // 알림 발생 로직
-        log.error("디바이스 {}에 대한 보안 알림 발생", device.getDeviceId());
-    }
-    
-    private void initiateSecurityProtocol(IoTDevice device) {
-        // 보안 프로토콜 실행 로직
-        log.info("디바이스 {}에 대한 보안 프로토콜 실행", device.getDeviceId());
-    }
-    
-    private SecurityPolicy generateSecurityPolicy(IoTDevice device) {
-        // 보안 정책 생성 로직
-        return new SecurityPolicy();
+    public List<IoTDevice> getUnhealthyDevices() {
+        return devices.stream()
+            .filter(device -> !device.isHealthy())
+            .toList();
     }
 } 

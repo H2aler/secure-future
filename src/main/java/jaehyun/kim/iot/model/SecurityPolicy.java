@@ -1,42 +1,32 @@
 package jaehyun.kim.iot.model;
 
+import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import lombok.NoArgsConstructor;
+import java.util.Set;
 
+@Entity
 @Data
+@NoArgsConstructor
 public class SecurityPolicy {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String policyId;
     private String policyName;
-    private LocalDateTime lastModified;
-    private Map<String, String> accessRules;
-    private List<String> allowedProtocols;
-    private int maxConnections;
-    private boolean encryptionRequired;
+    private String deviceType;
+    private Boolean requiresEncryption;
+    private Boolean requiresAuthentication;
+    private Integer maxConnections;
+    private String accessRules;
     private String authenticationMethod;
-    private Map<String, Object> customRules;
-    
-    public SecurityPolicy() {
-        this.policyId = generatePolicyId();
-        this.lastModified = LocalDateTime.now();
-        this.policyName = "Default Policy";
-        this.maxConnections = 100;
-        this.encryptionRequired = true;
-        this.authenticationMethod = "MULTI_FACTOR";
-    }
-    
-    private String generatePolicyId() {
-        return "POL-" + System.currentTimeMillis();
-    }
-    
-    public boolean validateAccess(String resource, String user) {
-        // 접근 제어 검증 로직
-        return true;
-    }
-    
-    public void updateRules(Map<String, String> newRules) {
-        this.accessRules = newRules;
-        this.lastModified = LocalDateTime.now();
+    private Boolean isDynamic;
+
+    @ElementCollection
+    private Set<String> allowedProtocols;
+
+    public boolean isCompliant(String protocol) {
+        return allowedProtocols.contains(protocol);
     }
 } 

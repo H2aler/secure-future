@@ -1,3 +1,6 @@
+## 라이선스
+Copyright © 2025 Jaehyun KIM. All Rights Reserved.
+
 # Secure Future - 2032 보안 통합 관리 시스템
 
 ## 프로젝트 개요
@@ -52,6 +55,34 @@ Jaehyun KIM의 보안 전문성을 바탕으로 2032년을 대비한 혁신적�
   - 인증 방식 설정
   - 동적 정책 업데이트 기능
 
+### 4. 데이터베이스 모듈
+#### 4.1 엔티티 클래스
+- `NetworkData`: 네트워크 트래픽 데이터 엔티티
+  - JPA 엔티티로 구현 (`@Entity`)
+  - ID 자동 생성 (`@GeneratedValue`)
+  - 대역폭 사용량, 연결 상태, 위험도 점수 필드 추가
+
+- `ThreatPrediction`: 위협 예측 결과 엔티티
+  - NetworkData와 ManyToOne 관계 설정
+  - 위협 점수, 유형, 설명, 타임스탬프 필드
+  - 응답 전략, 신뢰도, 우선순위 레벨 추가
+
+- `IoTDevice`: IoT 디바이스 정보 엔티티
+  - SecurityPolicy와 ManyToOne 관계 설정
+  - 디바이스 상태 모니터링 메서드 구현
+  - 보안 정책 업데이트 기능 구현
+
+- `SecurityPolicy`: 보안 정책 엔티티
+  - 허용된 프로토콜을 ElementCollection으로 관리
+  - 접근 규칙, 인증 방식, 동적 정책 여부 필드
+  - 암호화 및 인증 요구사항 설정
+
+#### 4.2 데이터베이스 설정
+- H2 데이터베이스 사용 (메모리 기반)
+- JPA/Hibernate를 통한 객체-관계 매핑
+- 자동 테이블 생성 및 스키마 업데이트
+- H2 콘솔을 통한 데이터베이스 관리
+
 ## 주요 기능
 
 ### 1. AI 기반 보안 위협 예측
@@ -78,11 +109,19 @@ Jaehyun KIM의 보안 전문성을 바탕으로 2032년을 대비한 혁신적�
 - 자동화된 보안 인시던트 처리
 - 보안 로그 관리 및 분석
 
+### 5. 데이터베이스 기능
+- JPA를 통한 객체-관계 매핑
+- 자동 테이블 생성 및 스키마 관리
+- 실시간 데이터 저장 및 조회
+- H2 콘솔을 통한 데이터베이스 모니터링
+- 파일 기반 데이터 영속성
+
 ## 기술 스택
 - Java 21
 - Spring Boot 3.2.0
 - TensorFlow
-- JPA
+- JPA/Hibernate
+- H2 Database
 - Lombok
 
 ## Windows 11 설치 가이드
@@ -269,5 +308,283 @@ Jaehyun KIM의 보안 전문성을 바탕으로 2032년을 대비한 혁신적�
 - 컴파일된 파일은 `.class` 확장자를 가집니다
 - 실행할 때는 `.class` 확장자를 제외하고 클래스 이름만 입력합니다
 
-## 라이선스
-Copyright © 2025 Jaehyun KIM. All Rights Reserved.
+
+## 문제 해결 및 운영 기록 (2025-06-08)
+
+### 1. Spring Boot 빌드 및 실행 오류 해결
+- `spring-boot` 플러그인 미설치로 인한 빌드 실패 → `pom.xml`에 Spring Boot 플러그인 및 parent 추가, 버전 명시(`3.2.0`).
+- 중복된 Main 클래스(`jaehyun.kim.SecureFutureApplication`, `kr.jaehyun.SecureFutureApplication`)로 인한 실행 오류 → `kr.jaehyun.SecureFutureApplication` 파일 삭제 및 `pom.xml`에 main class 지정.
+
+### 2. 컴파일 오류 및 모델 클래스 추가
+- 누락된 모델 클래스(`NetworkData`, `ThreatPrediction`, `IoTDevice`, `SecurityPolicy`) 직접 생성 및 패키지 구조에 맞게 배치.
+- `IoTDevice`에 `isHealthy()`, `updateSecurityPolicy(SecurityPolicy)` 등 실제 사용되는 메서드 구현.
+- `ThreatPrediction`에 생성자 추가(위협 점수, 유형, 설명 등 인자 받음).
+
+### 3. 데이터베이스(H2) 설정 및 연결 문제 해결
+- Spring Boot 실행 시 H2 DB 관련 오류 발생: `application.properties`에 H2 메모리 DB에서 파일 DB(`jdbc:h2:file:./testdb`)로 변경, H2 콘솔 원격 접속 허용 옵션 추가.
+- H2 콘솔 접속 시 JDBC URL을 반드시 `jdbc:h2:file:./testdb`로 입력해야 정상 연결됨을 명시.
+- 포트 충돌 시 프로세스 종료(`taskkill /F /PID ...`) 후 재실행.
+
+### 4. JPA 엔티티 클래스 구현
+- 모든 모델 클래스를 JPA 엔티티로 변환:
+  - `@Entity`, `@Id`, `@GeneratedValue` 등 JPA 어노테이션 추가
+  - 각 엔티티에 적절한 관계 매핑 설정 (`@ManyToOne`, `@ElementCollection` 등)
+  - 엔티티 간 연관관계 설정 (예: `NetworkData` ↔ `ThreatPrediction`, `IoTDevice` ↔ `SecurityPolicy`)
+  - 각 엔티티에 필요한 필드 추가 및 메서드 구현
+  - Lombok 어노테이션(`@Data`, `@NoArgsConstructor` 등) 활용
+
+### 5. 기타
+- README에 실제 운영 중 발생한 문제와 해결 방법, JDBC URL 등 실전 팁을 기록하여 추후 유지보수 및 신규 개발자 온보딩에 참고할 수 있도록 함.
+
+## 데이터베이스 설정
+
+### H2 데이터베이스 설정
+1. `pom.xml`에 H2 데이터베이스 의존성 추가:
+   ```xml
+   <dependency>
+       <groupId>com.h2database</groupId>
+       <artifactId>h2</artifactId>
+       <scope>runtime</scope>
+   </dependency>
+   ```
+
+2. `application.properties` 설정:
+   ```properties
+   # H2 Database Configuration
+   spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
+   spring.datasource.driverClassName=org.h2.Driver
+   spring.datasource.username=sa
+   spring.datasource.password=
+   spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+
+   # H2 Console Configuration
+   spring.h2.console.enabled=true
+   spring.h2.console.path=/h2-console
+   spring.h2.console.settings.web-allow-others=false
+
+   # JPA Configuration
+   spring.jpa.hibernate.ddl-auto=update
+   spring.jpa.show-sql=true
+   ```
+
+3. H2 콘솔 접속:
+   - URL: `http://localhost:8080/h2-console`
+   - JDBC URL: `jdbc:h2:mem:testdb`
+   - Username: `sa`
+   - Password: (비워두세요)
+
+4. 주의사항:
+   - H2 콘솔 접속 시 JDBC URL을 정확히 입력해야 합니다
+   - 파일 기반 DB이므로 애플리케이션 종료 후에도 데이터가 유지됩니다
+   - 포트 충돌 시 `taskkill /F /PID [프로세스ID]` 명령어로 프로세스 종료 후 재시작
+
+### 데이터베이스 초기화
+- `spring.jpa.hibernate.ddl-auto=update`: 엔티티 클래스 기반으로 테이블 자동 생성/수정
+- `spring.jpa.show-sql=true`: SQL 쿼리 로그 출력
+- 필요한 경우 `data.sql` 또는 `schema.sql` 파일을 `src/main/resources`에 추가하여 초기 데이터 설정 가능
+
+### 테이블 생성 및 샘플 데이터
+1. 테이블 생성 SQL:
+```sql
+-- NetworkData 테이블 생성
+CREATE TABLE network_data (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    source_ip VARCHAR(50),
+    destination_ip VARCHAR(50),
+    port INT,
+    protocol VARCHAR(20),
+    timestamp BIGINT,
+    payload BINARY,
+    bandwidth_usage DOUBLE,
+    connection_status VARCHAR(20),
+    risk_score DOUBLE
+);
+
+-- ThreatPrediction 테이블 생성
+CREATE TABLE threat_prediction (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    threat_score DOUBLE,
+    threat_type VARCHAR(50),
+    description VARCHAR(255),
+    timestamp BIGINT,
+    response_strategy VARCHAR(255),
+    confidence DOUBLE,
+    priority_level INT,
+    network_data_id BIGINT,
+    FOREIGN KEY (network_data_id) REFERENCES network_data(id)
+);
+
+-- SecurityPolicy 테이블 생성
+CREATE TABLE security_policy (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    policy_id VARCHAR(50),
+    policy_name VARCHAR(100),
+    device_type VARCHAR(50),
+    requires_encryption BOOLEAN,
+    requires_authentication BOOLEAN,
+    max_connections INT,
+    access_rules VARCHAR(255),
+    authentication_method VARCHAR(50),
+    is_dynamic BOOLEAN
+);
+
+-- SecurityPolicy 프로토콜 테이블 생성
+CREATE TABLE security_policy_protocols (
+    security_policy_id BIGINT,
+    allowed_protocols VARCHAR(50),
+    FOREIGN KEY (security_policy_id) REFERENCES security_policy(id)
+);
+
+-- IoTDevice 테이블 생성
+CREATE TABLE iot_device (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    device_id VARCHAR(50),
+    device_type VARCHAR(50),
+    manufacturer VARCHAR(100),
+    firmware_version VARCHAR(50),
+    status VARCHAR(20),
+    ip_address VARCHAR(50),
+    last_seen BIGINT,
+    is_secure BOOLEAN,
+    metrics VARCHAR(255),
+    security_policy_id BIGINT,
+    FOREIGN KEY (security_policy_id) REFERENCES security_policy(id)
+);
+```
+
+2. 샘플 데이터 삽입:
+```sql
+-- NetworkData 샘플 데이터
+INSERT INTO network_data (source_ip, destination_ip, port, protocol, timestamp, bandwidth_usage, connection_status, risk_score)
+VALUES 
+('127.0.0.1', '127.0.0.2', 80, 'HTTP', 1717843560000, 1024.5, 'ESTABLISHED', 0.3),
+('127.0.0.2', '127.0.0.3', 443, 'HTTPS', 1717843560000, 2048.7, 'ESTABLISHED', 0.1),
+('127.0.0.3', '127.0.0.4', 22, 'SSH', 1717843560000, 512.3, 'ESTABLISHED', 0.8);
+
+-- SecurityPolicy 샘플 데이터
+INSERT INTO security_policy (policy_id, policy_name, device_type, requires_encryption, requires_authentication, max_connections, access_rules, authentication_method, is_dynamic)
+VALUES 
+('POL001', 'Standard IoT Policy', 'SENSOR', true, true, 100, 'RESTRICTED', 'TOKEN', true),
+('POL002', 'Camera Policy', 'CAMERA', true, true, 50, 'RESTRICTED', 'CERTIFICATE', true);
+
+-- SecurityPolicy 프로토콜 샘플 데이터
+INSERT INTO security_policy_protocols (security_policy_id, allowed_protocols)
+VALUES 
+(1, 'HTTPS'),
+(1, 'MQTT'),
+(2, 'HTTPS'),
+(2, 'RTSP');
+
+-- IoTDevice 샘플 데이터
+INSERT INTO iot_device (device_id, device_type, manufacturer, firmware_version, status, ip_address, last_seen, is_secure, security_policy_id)
+VALUES 
+('DEV001', 'SENSOR', 'Samsung', '1.0.0', 'ACTIVE', '127.0.0.100', 1717843560000, true, 1),
+('DEV002', 'CAMERA', 'LG', '2.1.0', 'ACTIVE', '127.0.0.101', 1717843560000, true, 2);
+
+-- ThreatPrediction 샘플 데이터
+INSERT INTO threat_prediction (threat_score, threat_type, description, timestamp, response_strategy, confidence, priority_level, network_data_id)
+VALUES 
+(0.8, 'MALWARE', 'Suspicious file transfer detected', 1717843560000, 'BLOCK_AND_ALERT', 0.9, 1, 1),
+(0.3, 'SCAN', 'Port scan detected', 1717843560000, 'MONITOR', 0.7, 2, 2);
+```
+
+3. 데이터 확인 쿼리:
+```sql
+-- 각 테이블의 데이터 확인
+SELECT * FROM network_data;
+SELECT * FROM iot_device;
+SELECT * FROM security_policy;
+SELECT * FROM security_policy_protocols;
+SELECT * FROM threat_prediction;
+```
+
+주의사항:
+- timestamp 필드는 밀리초 단위의 BIGINT 값으로 저장됩니다
+- 외래 키 제약조건이 있으므로 테이블 생성 및 데이터 삽입 순서를 지켜야 합니다
+- H2 콘솔에서 SQL을 실행할 때는 세미콜론(;)으로 구분된 각 문장을 개별적으로 실행해야 합니다
+
+### 네트워크 데이터 수집 및 위협 분석
+
+#### 1. 네트워크 데이터 수집기 (NetworkDataCollector)
+- 1분마다 네트워크 인터페이스 모니터링
+- 트래픽 데이터 수집 및 위험도 계산
+- 주요 기능:
+  - 네트워크 인터페이스 자동 감지
+  - 트래픽 패턴 분석
+  - 위험도 점수 계산
+  - 실시간 데이터 저장
+
+#### 2. 위협 분석기 (ThreatAnalyzer)
+- 5분마다 위험도가 높은 트래픽 분석
+- 주요 기능:
+  - 위협 점수 계산
+  - 위협 유형 판단 (MALWARE, SCAN, SUSPICIOUS, NORMAL)
+  - 응답 전략 결정 (BLOCK_AND_ALERT, ALERT_AND_MONITOR, MONITOR, ALLOW)
+  - 신뢰도 및 우선순위 계산
+
+#### 3. 데이터 조회 기능
+```sql
+-- 최근 위협 예측 결과
+SELECT * FROM threat_prediction ORDER BY timestamp DESC;
+
+-- 위험도가 높은 트래픽
+SELECT * FROM network_data WHERE risk_score >= 0.7 ORDER BY risk_score DESC;
+
+-- 위협 유형별 통계
+SELECT threat_type, COUNT(*) as count, AVG(threat_score) as avg_score 
+FROM threat_prediction 
+GROUP BY threat_type 
+ORDER BY count DESC;
+
+-- 프로토콜별 위험도 분석
+SELECT protocol, COUNT(*) as count, AVG(risk_score) as avg_risk_score
+FROM network_data 
+GROUP BY protocol 
+ORDER BY avg_risk_score DESC;
+
+-- IP 주소별 위험도 분석
+SELECT source_ip, COUNT(*) as count, AVG(risk_score) as avg_risk_score
+FROM network_data 
+GROUP BY source_ip 
+HAVING avg_risk_score > 0.5 
+ORDER BY avg_risk_score DESC;
+```
+
+#### 4. 위험도 계산 기준
+- 프로토콜 기반 위험도:
+  - SSH: +0.3
+  - HTTP: +0.1
+  - HTTPS: +0.05
+  - FTP: +0.4
+  - TELNET: +0.5
+
+- 포트 기반 위험도:
+  - 1024 미만: +0.2
+  - SSH(22): +0.1
+  - Telnet(23): +0.2
+  - FTP(21): +0.15
+
+- 대역폭 사용량 기반 위험도:
+  - 1000 초과: +0.1
+  - 2000 초과: +0.2
+
+- IP 주소 기반 위험도:
+  - 로컬호스트(127.0.0.*): -0.1
+
+#### 5. 위협 유형 판단 기준
+- MALWARE: 위협 점수 >= 0.8
+- SCAN: 위협 점수 >= 0.6
+- SUSPICIOUS: 위협 점수 >= 0.4
+- NORMAL: 위협 점수 < 0.4
+
+#### 6. 응답 전략 결정 기준
+- BLOCK_AND_ALERT: 위협 점수 >= 0.8
+- ALERT_AND_MONITOR: 위협 점수 >= 0.6
+- MONITOR: 위협 점수 >= 0.4
+- ALLOW: 위협 점수 < 0.4
+
+#### 7. 우선순위 레벨
+- 1: 최우선 (위협 점수 >= 0.8)
+- 2: 높음 (위협 점수 >= 0.6)
+- 3: 중간 (위협 점수 >= 0.4)
+- 4: 낮음 (위협 점수 < 0.4)

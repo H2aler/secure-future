@@ -1,5 +1,7 @@
 package kr.jaehyun.iot;
 
+import kr.jaehyun.iot.model.IoTDevice;
+import kr.jaehyun.iot.model.SecurityPolicy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.util.concurrent.ConcurrentHashMap;
